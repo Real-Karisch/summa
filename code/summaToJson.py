@@ -1,12 +1,30 @@
 import re
-from summaToHtml import alterSummaLines, parseSumma, patterns, processQuestionIndices, processArticleIndices
+from utils import alterSummaLines, processQuestionIndices, processArticleIndices, processContentsIndices
+from variables import patterns, summaParts
 
 def listToStr(lst):
     return " ".join(
         [x.strip() for x in lst]
     ).strip()
 
-def generateSummaJson(summaLines, summaPartStr):
+def generateAllSummasJson(summaRawTextFolder):
+    allSummasJson = []
+    for summaPartNum in summaParts.keys():
+        with open(f"{summaRawTextFolder}/st_raw_{summaParts[summaPartNum]['snakeName']}.txt", 'r', encoding='utf-8') as file:
+            rawSummaLines = file.readlines()
+
+        summaLines = alterSummaLines(rawSummaLines, summaParts[summaPartNum]['str'])
+
+        allSummasJson.append(
+            generateSummaJson(
+                summaLines=summaLines,
+                summaPartNum=summaPartNum
+            )
+        )
+
+    return allSummasJson
+
+def generateSummaJson(summaLines, summaPartNum):
     cnt = 0
     lineSeparators = []
     questionStarts = []
@@ -28,11 +46,20 @@ def generateSummaJson(summaLines, summaPartStr):
         questions.append(
             generateQuestionJson(
                 questionLines=questionLines,
-                summaPartStr=summaPartStr
+                summaPartStr=summaParts[summaPartNum]['str']
             )
         )
 
-    return questions
+    contentsLines = summaLines[lineSeparators[2]+2:lineSeparators[3]]
+
+    contents = generateContentsJson(contentsLines)
+
+    return {
+        'partNum': summaPartNum,
+        'contents': contents,
+        'questions': questions
+    }
+
 
 def generateQuestionJson(questionLines, summaPartStr):
     questionNum = re.search(patterns['questionStart'], questionLines[0]).group(1)
@@ -43,7 +70,7 @@ def generateQuestionJson(questionLines, summaPartStr):
     singleArticle = questionIndices['articleSeparators'] == []
 
     if singleArticle:
-        questionSummary = []
+        questionSummary = ""
         articleBookends = [0] + [len(questionLines)]
         questionLines[2] = f'FIRST ARTICLE [{summaPartStr}, Q. {questionNum}, Art. 1]'
     else: 
@@ -152,20 +179,30 @@ def generateReplyJson(replyLines):
         'replyField': listToStr(replyLines)
     }
 
+def generateContentsJson(contentsLines):
+    contentsIndices = processContentsIndices(contentsLines)
+    firstQuestionIndex = [key for key, value in contentsIndices['runningQuestionTypeCategory'].items() if value == 'question'][0]
+    trimmedRunningContentsIndices = {key: value for key, value in contentsIndices['runningQuestionTypeCategory'].items() if key >= firstQuestionIndex-1}
+    contents = []
+    for index, category in trimmedRunningContentsIndices.items():
+        if category == 'sectionTitle':
+            contents.append(
+                {
+                    'sectionTitle': contentsLines[index],
+                    'sectionQuestions': []
+                }
+            )
+        elif category == 'question':
+            contents[-1]['sectionQuestions'].append(contentsLines[index].strip())
+        elif category == 'continuedQuestion':
+            contents[-1]['sectionQuestions'][-1] += contentsLines[index].strip()
+
+    return contents
+
 if __name__ == '__main__':
     import json
-    from summaToHtml import summaParts
-    summaPart = 1
 
-    with open(f"C:/Users/jackk/Projects/summa/data/st_raw_{summaParts[summaPart]['snakeName']}.txt", 'r', encoding='utf-8') as file:
-        lines = file.readlines()
+    allSummasJson = generateAllSummasJson('C:/Users/jackk/Projects/summa/summaTxts/')
 
-    summaLines = alterSummaLines(lines, summaParts[summaPart]['str'])
-
-    summaDict = generateSummaJson(
-        summaLines=summaLines,
-        summaPartStr=summaParts[summaPart]['str']
-    )
-
-    with open(f"C:/Users/jackk/Projects/summa/json/test.json", 'w') as file:
-        json.dump(summaDict, file)
+    with open(f"C:/Users/jackk/Projects/summa/json/allSummas.json", 'w') as file:
+        json.dump(allSummasJson, file)
