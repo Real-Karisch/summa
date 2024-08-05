@@ -2,21 +2,25 @@ summaParts = {
     1: {
         'snakeName': 'prima_pars',
         'camelName': 'primaPars',
+        'fullName': 'Prima Pars',
         'str': 'I'
     },
     2: {
         'snakeName': 'prima_secundae',
         'camelName': 'primaSecundae',
+        'fullName': 'Prima Secundae',
         'str': 'I-II'
     },
     3: {
         'snakeName': 'secunda_secundae',
         'camelName': 'secundaSecundae',
+        'fullName': 'Secunda Secundae',
         'str': 'II-II'
     },
     4: {
         'snakeName': 'tertia_pars',
         'camelName': 'tertiaPars',
+        'fullName': 'Tertia Pars',
         'str': 'III'
     },
 }

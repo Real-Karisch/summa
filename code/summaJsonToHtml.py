@@ -2,9 +2,10 @@ from airium import Airium
 import json
 import os
 import re
+from string import capwords
 
 from variables import patterns, summaParts
-from htmlFormats import formatStrToHtml
+from htmlFormats import htmlTranslator
 
 def generateQuestionHtml(questionJson, summaPartStr):    
     questionHtmlBuilder = Airium()
@@ -16,11 +17,11 @@ def generateQuestionHtml(questionJson, summaPartStr):
     with questionHtmlBuilder.div(id='mainwrap'):
         with questionHtmlBuilder.div(style="text-align: center"):
             questionHtmlBuilder.h1(_t=f"QUESTION {questionJson['questionNum']}")
-            questionHtmlBuilder.h2(_t=f"{questionJson['questionTitle']}")
+            questionHtmlBuilder.h2(_t=htmlTranslator(questionJson['questionTitle']))
         questionHtmlBuilder.br()
 
         questionHtmlBuilder(
-            formatStrToHtml(questionJson['questionSummary'])
+            htmlTranslator(questionJson['questionSummary'])
         )
 
         questionHtmlBuilder.br()
@@ -36,7 +37,7 @@ def generateQuestionHtml(questionJson, summaPartStr):
     return questionHtmlBuilder
 
 def generateArticleHtml(questionHtmlBuilder, articleJson):
-    questionHtmlBuilder.b(_t=f"{articleJson['articleTitle']}")
+    questionHtmlBuilder.b(_t=htmlTranslator(articleJson['articleTitle']))
     with questionHtmlBuilder.div(id='tightwrap'):
         #with questionHtmlBuilder.details(style='BACKGROUND-COLOR: #458B00; display:block;'):
         with questionHtmlBuilder.details():
@@ -50,7 +51,7 @@ def generateArticleHtml(questionHtmlBuilder, articleJson):
                             with questionHtmlBuilder.i():
                                 questionHtmlBuilder(f"Objection {objectionJson['objectionNum']}:")
                         questionHtmlBuilder(
-                            formatStrToHtml(objectionJson['objectionField'])
+                            htmlTranslator(objectionJson['objectionField'])
                         )
                         questionHtmlBuilder.br()
                         questionHtmlBuilder.br()
@@ -62,7 +63,7 @@ def generateArticleHtml(questionHtmlBuilder, articleJson):
                                 with questionHtmlBuilder.i():
                                     questionHtmlBuilder(f"Reply Objection {replyJson['replyNum']}:")
                             questionHtmlBuilder(
-                                formatStrToHtml(replyJson['replyField'])
+                                htmlTranslator(replyJson['replyField'])
                             )
                             questionHtmlBuilder.br()
                             questionHtmlBuilder.br()
@@ -80,7 +81,7 @@ def generateArticleHtml(questionHtmlBuilder, articleJson):
                                 with questionHtmlBuilder.i():
                                     questionHtmlBuilder("Sed contra,")
                             questionHtmlBuilder(
-                                formatStrToHtml(f"{articleJson['sedContraField'][19:]}")
+                                htmlTranslator(f"{articleJson['sedContraField'][19:]}")
                             )
                             questionHtmlBuilder.br()
                             questionHtmlBuilder.br()
@@ -90,7 +91,7 @@ def generateArticleHtml(questionHtmlBuilder, articleJson):
                                 with questionHtmlBuilder.i():
                                     questionHtmlBuilder("Respondeo,")
                             questionHtmlBuilder(
-                                formatStrToHtml(f"{articleJson['respondeoField'][17:]}")
+                                htmlTranslator(f"{articleJson['respondeoField'][17:]}")
                             )
                             questionHtmlBuilder.br()
                             questionHtmlBuilder.br()
@@ -120,6 +121,10 @@ def generateContentsHtml(contentsJson, summaPartStr):
     return contentsHtmlBuilder
 
 def generateAllSummasHtml(allSummasJson, htmlDestinationFolder):
+    indexHtml = generateSummaIndexHtml(allSummasJson)
+    with open(f"{htmlDestinationFolder}/summa.html", 'wb') as file:
+        file.write(bytes(indexHtml))
+
     for summaJson in allSummasJson:
         summaPartNum = summaJson['partNum']
         if summaParts[summaPartNum]['camelName'] not in os.listdir(htmlDestinationFolder):
@@ -132,7 +137,7 @@ def generateAllSummasHtml(allSummasJson, htmlDestinationFolder):
             summaPartStr=summaParts[summaPartNum]['str']
         )
 
-        with open(f"{htmlDestinationFolder}/{summaParts[summaPartNum]['camelName']}/summa{summaParts[summaPartNum]['str']}Contents.html", 'wb') as file:
+        with open(f"{htmlDestinationFolder}/{summaParts[summaPartNum]['camelName']}/contents.html", 'wb') as file:
             file.write(bytes(contentsHtml))
 
         for questionJson in summaJson['questions']:
@@ -144,8 +149,37 @@ def generateAllSummasHtml(allSummasJson, htmlDestinationFolder):
             with open(f"{htmlDestinationFolder}/{summaParts[summaPartNum]['camelName']}/questions/summa{summaParts[summaPartNum]['str']}q{questionJson['questionNum']}.html", 'wb') as file:
                 file.write(bytes(questionHtml))
 
+def generateSummaIndexHtml(allSummasJson):
+    indexHtmlBuilder = Airium()
+    with indexHtmlBuilder.head():
+        indexHtmlBuilder.title(_t=f"Summa Theologiae")
+        indexHtmlBuilder.link(href="styles.css", rel="stylesheet")
+        indexHtmlBuilder('<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />')
+    
+    with indexHtmlBuilder.div(id='mainwrap'):
+        with indexHtmlBuilder.div(style="text-align: center"):
+            indexHtmlBuilder.h1(_t=f"Summa Theologiae")
+            indexHtmlBuilder.br()
+            indexHtmlBuilder.br()
+            indexHtmlBuilder.br()
+
+            for summaJson in allSummasJson:
+                summaPartStr = summaParts[summaJson['partNum']]['str']
+                summaPartFullName = summaParts[summaJson['partNum']]['fullName']
+                summaPartCamelName = summaParts[summaJson['partNum']]['camelName']
+                with indexHtmlBuilder.b():
+                    indexHtmlBuilder.a(href=f"./{summaPartCamelName}/contents.html", style="text-decoration: underline", _t=f"{summaPartStr}: {summaPartFullName}")
+                indexHtmlBuilder.br()
+                for section in summaJson['contents']:
+                    indexHtmlBuilder(capwords(section['sectionTitle']))
+                    indexHtmlBuilder.br()
+                indexHtmlBuilder.br()
+                indexHtmlBuilder.br()
+    
+    return indexHtmlBuilder
+
 if __name__ == '__main__':
-    with open('C:/Users/jackk/Projects/summa/json/allSummas.json', 'r') as file:
+    with open('C:/Users/jackk/Projects/summa/json/allSummas_dev.json', 'r') as file:
         allSummasJson = json.load(file)
 
     generateAllSummasHtml(

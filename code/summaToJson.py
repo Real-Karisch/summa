@@ -204,5 +204,5 @@ if __name__ == '__main__':
 
     allSummasJson = generateAllSummasJson('C:/Users/jackk/Projects/summa/summaTxts/')
 
-    with open(f"C:/Users/jackk/Projects/summa/json/allSummas.json", 'w') as file:
+    with open(f"C:/Users/jackk/Projects/summa/json/allSummas_raw.json", 'w') as file:
         json.dump(allSummasJson, file)
