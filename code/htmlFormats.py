@@ -8,19 +8,25 @@ htmlRegionTagTranslations = [ #these will fill in the symbol with tag, and put t
     {
         'symbol': '_',
         'tag': 'i',
-        'dynamicAttribute': '',
+        'dynamicAttributes': [],
         'staticAttributeStr': '',
     },
     {
         'symbol': '@',
         'tag': 'span',
-        'dynamicAttribute': 'title',
+        'dynamicAttributes': ['title'],
         'staticAttributeStr': ' id="notation"',
     },
     {
         'symbol': '%',
         'tag': 'a',
-        'dynamicAttribute': 'href',
+        'dynamicAttributes': ['href', 'title'],
+        'staticAttributeStr': ' id="notationlink"',
+    },
+    {
+        'symbol': '&',
+        'tag': 'sup',
+        'dynamicAttributes': ['title'],
         'staticAttributeStr': ' id="notation"',
     },
 ]
@@ -39,15 +45,21 @@ def htmlSingleTagTranslator(string):
 def htmlRegionTagTranslator(string):
     stringList = list(string)
     for tagDetails in htmlRegionTagTranslations:
-        
-
         if re.search(tagDetails['symbol'], string):
-            pattern = f"{tagDetails['symbol']}([^#]*)#([^{tagDetails['symbol']}]*){tagDetails['symbol']}" if tagDetails['dynamicAttribute'] != '' else f"{tagDetails['symbol']}([^{tagDetails['symbol']}]*)(){tagDetails['symbol']}"
+            pattern = tagDetails['symbol']
+            for _ in tagDetails['dynamicAttributes']:
+                pattern += f"([^#]*)#"
+            pattern += f"([^{tagDetails['symbol']}]*)" + tagDetails['symbol']
+            #pattern = f"{tagDetails['symbol']}([^#]*)#([^{tagDetails['symbol']}]*){tagDetails['symbol']}" if tagDetails['dynamicAttribute'] != '' else f"{tagDetails['symbol']}([^{tagDetails['symbol']}]*)(){tagDetails['symbol']}"
             matchCnt = 1
             for match in re.finditer(pattern, string):
-                activeDynamicAttribute = tagDetails['dynamicAttribute'] != ''
-                dynamicAttribute = f' {tagDetails["dynamicAttribute"]}="{match.group(2)}"' if activeDynamicAttribute else ''
-                stringList[match.start()] = f"<{tagDetails['tag']}{dynamicAttribute}{tagDetails['staticAttributeStr']}>{match.group(1)}</{tagDetails['tag']}>"
+                activeDynamicAttribute = tagDetails['dynamicAttributes'] != []
+                dynamicAttributeStr = ''
+                groupCnt = 2
+                for dynamicAttributeTag in tagDetails['dynamicAttributes']:
+                    dynamicAttributeStr += f' {dynamicAttributeTag}="{match.group(groupCnt)}"'
+                    groupCnt += 1
+                stringList[match.start()] = f"<{tagDetails['tag']}{dynamicAttributeStr}{tagDetails['staticAttributeStr']}>{match.group(1)}</{tagDetails['tag']}>"
                 stringList[match.start()+1:match.end()] = [''] * (match.end() - match.start() - 1)
                 matchCnt += 1
 

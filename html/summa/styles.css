@@ -17,14 +17,21 @@
 }
 
 #notation {
-    text-decoration: underline;
+    color: rgb(142, 0, 0);
 }
 #notation:hover {
-    font-style: italic;
+    text-decoration: underline;
+}
+#notationlink {
+    color: rgb(163, 106, 0);
+    text-decoration: none;
+}
+#notationlink:hover {
+    text-decoration: underline;
 }
 
 a:link {
-    color: black;
+    color: rgb(0, 0, 0);
     text-decoration: none;
 }
 
