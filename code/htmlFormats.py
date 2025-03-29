@@ -21,7 +21,7 @@ htmlRegionTagTranslations = [ #these will fill in the symbol with tag, and put t
         'symbol': '%',
         'tag': 'a',
         'dynamicAttributes': ['href', 'title'],
-        'staticAttributeStr': ' id="notationlink"',
+        'staticAttributeStr': ' id="notationlink" target="_blank"',
     },
     {
         'symbol': '&',

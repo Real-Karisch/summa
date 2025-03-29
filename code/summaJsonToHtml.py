@@ -18,6 +18,10 @@ def generateQuestionHtml(questionJson, summaPartStr):
         with questionHtmlBuilder.div(style="text-align: center"):
             questionHtmlBuilder.h1(_t=f"QUESTION {questionJson['questionNum']}")
             questionHtmlBuilder.h2(_t=htmlTranslator(questionJson['questionTitle']))
+            questionHtmlBuilder.br()
+            questionHtmlBuilder.a(href='./../contents.html', _t=f"Return to Summa Theologiae {summaPartStr} Contents", style="text-decoration: underline")
+            questionHtmlBuilder(" | ")
+            questionHtmlBuilder.a(href='./../../summa.html', _t=f"Return to Summa Theologiae Home Page", style="text-decoration: underline")
         questionHtmlBuilder.br()
 
         questionHtmlBuilder(
@@ -108,6 +112,7 @@ def generateContentsHtml(contentsJson, summaPartStr):
     with contentsHtmlBuilder.div(id='mainwrap'):
         with contentsHtmlBuilder.div(style="text-align: center"):
             contentsHtmlBuilder.h1(_t=f"Summa Theologiae {summaPartStr}: Contents")
+            contentsHtmlBuilder.a(href='./../summa.html', _t=f"Return to Summa Theologiae Home Page", style="text-decoration: underline")
         for sectionJson in contentsJson:
             contentsHtmlBuilder.br()
             contentsHtmlBuilder.br()
